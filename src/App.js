@@ -155,9 +155,12 @@ class App extends React.Component {
         <Controls
           selectedControl={selectedControl}
           onSelectControl={control => {
+            const isUnselecting = control === selectedControl;
+
             this.setState({
-              selectedControl: control,
-              highlightedNumber: control === clear ? none : control
+              selectedControl: isUnselecting ? none : control,
+              highlightedNumber:
+                isUnselecting || control === clear ? none : control
             });
           }}
         />
