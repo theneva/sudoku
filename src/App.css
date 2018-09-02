@@ -69,6 +69,10 @@
   background-color: orange;
 }
 
+.cell.cell--initial.cell--highlighted {
+  background-color: lightblue;
+}
+
 .controls {
   display: flex;
 }

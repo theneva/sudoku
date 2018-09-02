@@ -125,17 +125,26 @@ class App extends React.Component {
             onClickCell={(rowIndex, columnIndex) => {
               const cell = board[rowIndex][columnIndex];
 
-              if (selectedControl === none || cell.initial) {
-                if (cell.value === empty) {
+              if (cell.initial) {
+                if (highlightedNumber === cell.value) {
+                  this.setState({
+                    highlightedNumber: none,
+                    selectedControl: none
+                  });
                   return;
                 }
 
                 this.setState({
-                  selectedControl: none,
                   highlightedNumber: cell.value
                 });
 
                 return;
+              }
+
+              if (selectedControl === none) {
+                if (cell.value === empty) {
+                  return;
+                }
               }
 
               if (selectedControl === clear) {
@@ -143,6 +152,12 @@ class App extends React.Component {
                   return;
                 }
 
+                cell.value = empty;
+                this.setState({ board });
+                return;
+              }
+
+              if (selectedControl === cell.value) {
                 cell.value = empty;
                 this.setState({ board });
                 return;
