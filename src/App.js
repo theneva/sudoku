@@ -35,10 +35,14 @@ const gameboardWithMetadata = gameboard.map(row =>
   })
 );
 
-const Cell = ({ cell }) => (
-  <div className={classNames('cell', { 'cell--initial': cell.initial })}>
+const Cell = ({ cell, onClick }) => (
+  <button
+    type="button"
+    className={classNames('cell', { 'cell--initial': cell.initial })}
+    onClick={onClick}
+  >
     {cell.value}
-  </div>
+  </button>
 );
 
 Cell.propTypes = {
@@ -46,16 +50,21 @@ Cell.propTypes = {
     initial: PropTypes.bool.isRequired,
     value: PropTypes.oneOfType([PropTypes.number, PropTypes.symbol]),
     marks: PropTypes.arrayOf(PropTypes.number).isRequired
-  }).isRequired
+  }).isRequired,
+  onClick: PropTypes.func.isRequired
 };
 
-const Board = ({ board }) =>
+const Board = ({ board, onClickCell }) =>
   board.map((row, rowIndex) => (
     // eslint-disable-next-line react/no-array-index-key
     <div key={`row-${rowIndex + 1}`} className="row">
       {row.map((cell, columnIndex) => (
-        // eslint-disable-next-line react/no-array-index-key
-        <Cell key={`row-${rowIndex}-column-${columnIndex}`} cell={cell} />
+        <Cell
+          // eslint-disable-next-line react/no-array-index-key
+          key={`row-${rowIndex}-column-${columnIndex}`}
+          cell={cell}
+          onClick={() => onClickCell(rowIndex, columnIndex)}
+        />
       ))}
     </div>
   ));
@@ -95,16 +104,40 @@ Controls.propTypes = {
 
 class App extends React.Component {
   state = {
+    board: gameboardWithMetadata,
     selectedControl: null
   };
 
   render() {
-    const { selectedControl } = this.state;
+    const { board, selectedControl } = this.state;
 
     return (
       <div className="app">
         <div className="board">
-          <Board board={gameboardWithMetadata} />
+          <Board
+            board={board}
+            onClickCell={(rowIndex, columnIndex) => {
+              const cell = board[rowIndex][columnIndex];
+
+              if (selectedControl === null || cell.initial) {
+                // TODO highlight other cells with same color
+                return;
+              }
+
+              if (selectedControl === clear) {
+                if (cell.value === null) {
+                  return;
+                }
+
+                cell.value = null;
+                this.setState({ board });
+                return;
+              }
+
+              cell.value = selectedControl;
+              this.setState({ board });
+            }}
+          />
         </div>
         <Controls
           selectedControl={selectedControl}
