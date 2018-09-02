@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import './App.css';
 
 const e = Symbol('empty');
@@ -16,32 +17,56 @@ const gameboard = [
   [e, e, e, 8, 4, 2, 9, 5, 7]
 ];
 
-const Cell = ({ value }) => (
-  <div className="cell">{value === e ? null : value}</div>
+const gameboardWithMetadata = gameboard.map(row =>
+  row.map(cell => {
+    if (cell === e) {
+      return {
+        value: null,
+        initial: false,
+        marks: []
+      };
+    }
+
+    return {
+      value: cell,
+      initial: true,
+      marks: []
+    };
+  })
+);
+
+const Cell = ({ cell }) => (
+  <div className={classNames('cell', { 'cell--initial': cell.initial })}>
+    {cell.value}
+  </div>
 );
 
 Cell.propTypes = {
-  value: PropTypes.oneOfType([PropTypes.number, PropTypes.symbol]).isRequired
+  cell: PropTypes.shape({
+    initial: PropTypes.bool.isRequired,
+    value: PropTypes.oneOfType([PropTypes.number, PropTypes.symbol]),
+    marks: PropTypes.arrayOf(PropTypes.number).isRequired
+  }).isRequired
 };
 
-const Grid = ({ board }) =>
+const Board = ({ board }) =>
   board.map((row, rowIndex) => (
     // eslint-disable-next-line react/no-array-index-key
     <div key={`row-${rowIndex + 1}`} className="row">
       {row.map((cell, columnIndex) => (
         // eslint-disable-next-line react/no-array-index-key
-        <Cell key={`row-${rowIndex}-column-${columnIndex}`} value={cell} />
+        <Cell key={`row-${rowIndex}-column-${columnIndex}`} cell={cell} />
       ))}
     </div>
   ));
 
-Grid.propTypes = {
-  board: PropTypes.arrayOf(PropTypes.arrayOf(Cell.propTypes.value)).isRequired
+Board.propTypes = {
+  board: PropTypes.arrayOf(PropTypes.arrayOf(Cell.propTypes.cell)).isRequired
 };
 
 const App = () => (
   <div className="board">
-    <Grid board={gameboard} />
+    <Board board={gameboardWithMetadata} />
   </div>
 );
 
