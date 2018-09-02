@@ -3,7 +3,12 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import './App.css';
 
-const e = Symbol('empty');
+const clear = Symbol('clear');
+const e = Symbol('empty cell');
+const none = Symbol('nothing selected');
+
+const numberControls = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+const controls = [...numberControls, clear];
 
 const gameboard = [
   [e, 2, 8, 3, 6, 1, 7, 9, 5],
@@ -18,32 +23,29 @@ const gameboard = [
 ];
 
 const gameboardWithMetadata = gameboard.map(row =>
-  row.map(cell => {
-    if (cell === e) {
-      return {
-        value: null,
-        initial: false,
-        marks: []
-      };
-    }
-
-    return {
-      value: cell,
-      initial: true,
-      marks: []
-    };
-  })
+  row.map(cell => ({
+    value: cell,
+    initial: cell !== e,
+    marks: []
+  }))
 );
 
-const Cell = ({ cell, onClick }) => (
+const Cell = ({ cell, onClick, highlightedNumber }) => (
   <button
     type="button"
-    className={classNames('cell', { 'cell--initial': cell.initial })}
+    className={classNames('cell', {
+      'cell--initial': cell.initial,
+      'cell--highlighted': highlightedNumber === cell.value
+    })}
     onClick={onClick}
   >
-    {cell.value}
+    {cell.value === e ? null : cell.value}
   </button>
 );
+
+Cell.defaultProps = {
+  highlightedNumber: none
+};
 
 Cell.propTypes = {
   cell: PropTypes.shape({
@@ -51,10 +53,11 @@ Cell.propTypes = {
     value: PropTypes.oneOfType([PropTypes.number, PropTypes.symbol]),
     marks: PropTypes.arrayOf(PropTypes.number).isRequired
   }).isRequired,
-  onClick: PropTypes.func.isRequired
+  onClick: PropTypes.func.isRequired,
+  highlightedNumber: PropTypes.oneOf([...numberControls, none])
 };
 
-const Board = ({ board, onClickCell }) =>
+const Board = ({ board, highlightedNumber, onClickCell }) =>
   board.map((row, rowIndex) => (
     // eslint-disable-next-line react/no-array-index-key
     <div key={`row-${rowIndex + 1}`} className="row">
@@ -63,6 +66,7 @@ const Board = ({ board, onClickCell }) =>
           // eslint-disable-next-line react/no-array-index-key
           key={`row-${rowIndex}-column-${columnIndex}`}
           cell={cell}
+          highlightedNumber={highlightedNumber}
           onClick={() => onClickCell(rowIndex, columnIndex)}
         />
       ))}
@@ -70,66 +74,75 @@ const Board = ({ board, onClickCell }) =>
   ));
 
 Board.propTypes = {
-  board: PropTypes.arrayOf(PropTypes.arrayOf(Cell.propTypes.cell)).isRequired
+  board: PropTypes.arrayOf(PropTypes.arrayOf(Cell.propTypes.cell)).isRequired,
+  highlightedNumber: PropTypes.oneOf([...numberControls, none]),
+  onClickCell: PropTypes.func.isRequired
 };
-
-const clear = 'X';
-const controls = [1, 2, 3, 4, 5, 6, 7, 8, 9, clear];
 
 const Controls = ({ selectedControl, onSelectControl }) => (
   <div className="controls">
     {controls.map(control => (
       <button
-        key={`control-${control}`}
+        key={`control-${control === clear ? control.toString() : control}`}
         type="button"
         className={classNames('control', {
           'control--active': control === selectedControl
         })}
         onClick={() => onSelectControl(control)}
       >
-        {control}
+        {control === clear ? 'X' : control}
       </button>
     ))}
   </div>
 );
 
 Controls.defaultProps = {
-  selectedControl: null
+  selectedControl: none
 };
 
 Controls.propTypes = {
-  selectedControl: PropTypes.oneOf(controls),
+  selectedControl: PropTypes.oneOf([...controls, none]),
   onSelectControl: PropTypes.func.isRequired
 };
 
 class App extends React.Component {
   state = {
     board: gameboardWithMetadata,
-    selectedControl: null
+    selectedControl: none,
+    highlightedNumber: none
   };
 
   render() {
-    const { board, selectedControl } = this.state;
+    const { board, selectedControl, highlightedNumber } = this.state;
 
     return (
       <div className="app">
         <div className="board">
           <Board
             board={board}
+            highlightedNumber={highlightedNumber}
             onClickCell={(rowIndex, columnIndex) => {
               const cell = board[rowIndex][columnIndex];
 
-              if (selectedControl === null || cell.initial) {
-                // TODO highlight other cells with same color
+              if (selectedControl === none || cell.initial) {
+                if (cell.value === e) {
+                  return;
+                }
+
+                this.setState({
+                  selectedControl: none,
+                  highlightedNumber: cell.value
+                });
+
                 return;
               }
 
               if (selectedControl === clear) {
-                if (cell.value === null) {
+                if (cell.value === e) {
                   return;
                 }
 
-                cell.value = null;
+                cell.value = e;
                 this.setState({ board });
                 return;
               }
@@ -142,7 +155,10 @@ class App extends React.Component {
         <Controls
           selectedControl={selectedControl}
           onSelectControl={control => {
-            this.setState({ selectedControl: control });
+            this.setState({
+              selectedControl: control,
+              highlightedNumber: control === clear ? none : control
+            });
           }}
         />
       </div>

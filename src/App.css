@@ -65,6 +65,10 @@
   background-color: gray;
 }
 
+.cell.cell--highlighted {
+  background-color: orange;
+}
+
 .controls {
   display: flex;
 }
