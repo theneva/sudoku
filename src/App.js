@@ -4,7 +4,8 @@ import classNames from 'classnames';
 import './App.css';
 
 const clear = Symbol('clear');
-const e = Symbol('empty cell');
+const empty = Symbol('empty cell');
+const e = empty; // Alias for pretty layout in gameboard
 const none = Symbol('nothing selected');
 
 const numberControls = [1, 2, 3, 4, 5, 6, 7, 8, 9];
@@ -25,7 +26,7 @@ const gameboard = [
 const gameboardWithMetadata = gameboard.map(row =>
   row.map(cell => ({
     value: cell,
-    initial: cell !== e,
+    initial: cell !== empty,
     marks: []
   }))
 );
@@ -39,7 +40,7 @@ const Cell = ({ cell, onClick, highlightedNumber }) => (
     })}
     onClick={onClick}
   >
-    {cell.value === e ? null : cell.value}
+    {cell.value === empty ? null : cell.value}
   </button>
 );
 
@@ -125,7 +126,7 @@ class App extends React.Component {
               const cell = board[rowIndex][columnIndex];
 
               if (selectedControl === none || cell.initial) {
-                if (cell.value === e) {
+                if (cell.value === empty) {
                   return;
                 }
 
@@ -138,11 +139,11 @@ class App extends React.Component {
               }
 
               if (selectedControl === clear) {
-                if (cell.value === e) {
+                if (cell.value === empty) {
                   return;
                 }
 
-                cell.value = e;
+                cell.value = empty;
                 this.setState({ board });
                 return;
               }
