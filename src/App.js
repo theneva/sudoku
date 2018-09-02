@@ -64,10 +64,57 @@ Board.propTypes = {
   board: PropTypes.arrayOf(PropTypes.arrayOf(Cell.propTypes.cell)).isRequired
 };
 
-const App = () => (
-  <div className="board">
-    <Board board={gameboardWithMetadata} />
+const clear = 'X';
+const controls = [1, 2, 3, 4, 5, 6, 7, 8, 9, clear];
+
+const Controls = ({ selectedControl, onSelectControl }) => (
+  <div className="controls">
+    {controls.map(control => (
+      <button
+        key={`control-${control}`}
+        type="button"
+        className={classNames('control', {
+          'control--active': control === selectedControl
+        })}
+        onClick={() => onSelectControl(control)}
+      >
+        {control}
+      </button>
+    ))}
   </div>
 );
+
+Controls.defaultProps = {
+  selectedControl: null
+};
+
+Controls.propTypes = {
+  selectedControl: PropTypes.oneOf(controls),
+  onSelectControl: PropTypes.func.isRequired
+};
+
+class App extends React.Component {
+  state = {
+    selectedControl: null
+  };
+
+  render() {
+    const { selectedControl } = this.state;
+
+    return (
+      <div className="app">
+        <div className="board">
+          <Board board={gameboardWithMetadata} />
+        </div>
+        <Controls
+          selectedControl={selectedControl}
+          onSelectControl={control => {
+            this.setState({ selectedControl: control });
+          }}
+        />
+      </div>
+    );
+  }
+}
 
 export default App;
